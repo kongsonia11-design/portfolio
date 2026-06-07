@@ -1,0 +1,124 @@
+---
+import '../styles/global.css';
+import { ViewTransitions } from 'astro:transitions';
+export interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = 'Sonia Kong — Product Design & Art',
+  description = 'Design that makes you THINK + PLAY.',
+} = Astro.props;
+const nav = [
+  { label: 'Work',    href: '/work' },
+  { label: 'About',   href: '/about' },
+  { label: 'Contact', href: '/#contact' },
+];
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <ViewTransitions />
+  </head>
+  <body>
+    <div id="cursor"></div>
+    <nav class="nav">
+      <div class="nav__inner">
+        <a href="/" class="nav__logo" aria-label="Sonia Kong">
+          <img src="/images/logo.png" alt="Sonia Kong"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+          <span class="nav__logo-text" style="display:none">Sonia Kong</span>
+        </a>
+        <ul class="nav__links">
+          {nav.map(link => <li><a href={link.href}>{link.label}</a></li>)}
+        </ul>
+      </div>
+    </nav>
+    <main><slot /></main>
+
+    <!-- Floating contact icons -->
+    <div id="contact-pill" style="
+      position:fixed; bottom:5rem; right:2rem; z-index:200;
+      display:flex; flex-direction:column; gap:0.75rem; align-items:center;
+      opacity:0; transform:translateY(10px);
+      transition:opacity 0.4s ease, transform 0.4s ease;
+      pointer-events:none;
+    ">
+      <a href="mailto:kongsonia11@gmail.com" title="Email" style="
+        width:40px; height:40px; border-radius:50%;
+        background:var(--accent-pale); color:var(--accent);
+        display:flex; align-items:center; justify-content:center;
+        transition:background 0.2s, color 0.2s;
+      " onmouseover="this.style.background='var(--accent)';this.style.color='var(--cream)'" onmouseout="this.style.background='var(--accent-pale)';this.style.color='var(--accent)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <polyline points="2,4 12,13 22,4"/>
+        </svg>
+      </a>
+      <a href="https://www.instagram.com/soniakong.design" target="_blank" rel="noopener" title="Instagram" style="
+        width:40px; height:40px; border-radius:50%;
+        background:var(--accent-pale); color:var(--accent);
+        display:flex; align-items:center; justify-content:center;
+        transition:background 0.2s, color 0.2s;
+      " onmouseover="this.style.background='var(--accent)';this.style.color='var(--cream)'" onmouseout="this.style.background='var(--accent-pale)';this.style.color='var(--accent)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <circle cx="12" cy="12" r="4"/>
+          <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
+        </svg>
+      </a>
+    </div>
+    <script>
+      // Custom cursor
+      const cursor = document.getElementById('cursor');
+      document.addEventListener('mousemove', e => {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top  = e.clientY + 'px';
+      });
+      document.querySelectorAll('a, button, [role="button"]').forEach(el => {
+        el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+        el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+      });
+    </script>
+    <script>
+      const pill = document.getElementById('contact-pill');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 400) {
+          pill.style.opacity = '0.85';
+          pill.style.transform = 'translateY(0)';
+          pill.style.pointerEvents = 'auto';
+        } else {
+          pill.style.opacity = '0';
+          pill.style.transform = 'translateY(10px)';
+          pill.style.pointerEvents = 'none';
+        }
+      });
+    </script>
+
+    <footer class="footer">
+      <div class="footer__inner" style="flex-direction:column; gap:1.5rem; text-align:center; padding-block:3rem;">
+        <a href="/work" style="
+          display:inline-flex; align-items:center; gap:0.6rem;
+          font-family:var(--font-display); font-style:italic;
+          font-size:clamp(1.1rem, 2.5vw, 1.5rem);
+          color:var(--ink); border-bottom:1px solid var(--cream-border);
+          padding-bottom:0.2rem;
+          transition:color 0.2s, border-color 0.2s;
+        " onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--ink)';this.style.borderColor='var(--cream-border)'">
+          Selected Works
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <div style="display:flex; justify-content:space-between; width:100%; font-size:0.8rem; color:var(--ink-light);">
+          <span>© {new Date().getFullYear()} Sonia Kong</span>
+          <span>Product Design & Art</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

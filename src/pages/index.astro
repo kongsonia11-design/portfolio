@@ -1,0 +1,316 @@
+---
+import { getCollection } from 'astro:content';
+import '../styles/global.css';
+
+const allProjects = await getCollection('projects');
+const projects = allProjects
+  .filter(p => p.data.image)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sonia Kong — Product Design & Art</title>
+</head>
+<body>
+  <div id="cursor"></div>
+
+  <!-- STATE 1: INTRO LOGO -->
+  <div id="intro">
+    <button id="enter-btn" aria-label="Enter site">
+      <img src="/images/logo.gif" alt="Sonia Kong" onerror="this.src='/images/logo.png'" />
+    </button>
+    <p class="intro__hint">click to enter</p>
+  </div>
+
+  <!-- STATE 2: PHRASE -->
+  <div id="phrase-screen">
+    <p id="tagline">Design that makes you <em>THINK</em> + <em>PLAY</em></p>
+    <button id="scroll-btn" aria-label="View work">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5v14M5 12l7 7 7-7"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- STATE 3: GALLERY -->
+  <div id="gallery">
+    <header id="gallery-nav">
+      <a href="/about" class="nav-link">About</a>
+      <a href="/" class="nav-center-logo">
+        <img src="/images/logo.gif" alt="Sonia Kong" onerror="this.src='/images/logo.png'" />
+      </a>
+      <a href="mailto:kongsonia11@gmail.com" class="nav-link">Contact</a>
+    </header>
+
+    <div id="projects-row">
+      <div id="projects-track">
+        {[...projects, ...projects].map((project, i) => (
+          <a href={`/work/${project.slug}`} class="project-item" data-index={i}>
+            <div class="project-item__img">
+              <img src={project.data.image} alt={project.data.title} loading="lazy" />
+            </div>
+            <p class="project-item__title">{project.data.title.split(':')[0]}</p>
+            <p class="project-item__tag">{project.data.tags?.[0]}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
+
+<style is:global>
+  body { overflow: hidden; margin: 0; background: #FAF8F3; }
+
+  /* ── STATE 1: INTRO ── */
+  #intro {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--cream);
+    z-index: 50;
+    transition: opacity 0.6s ease;
+  }
+  #intro.zooming { opacity: 0; pointer-events: none; }
+  #intro.hidden  { display: none; }
+
+  #enter-btn {
+    background: none; border: none; cursor: pointer; padding: 0;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  #enter-btn img {
+    height: 120px; width: auto; display: block;
+    mix-blend-mode: multiply;
+    transition: transform 0.35s ease;
+  }
+  #enter-btn:hover img { transform: scale(1.08); }
+  #enter-btn.spin img {
+    transition: transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
+    transform: rotate(360deg) scale(1.4);
+    opacity: 0;
+  }
+  .intro__hint {
+    margin-top: 2rem; font-size: 0.65rem; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--ink-light);
+    opacity: 0; transform: translateY(4px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+  }
+  #enter-btn:hover + .intro__hint { opacity: 1; transform: translateY(0); }
+  #enter-btn.spin + .intro__hint  { opacity: 0; }
+
+  /* ── STATE 2: PHRASE ── */
+  #phrase-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--cream);
+    z-index: 40;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease;
+  }
+  #phrase-screen.visible { opacity: 1; visibility: visible; }
+  #phrase-screen.hiding  {
+    opacity: 0;
+    transform: translateY(-60px);
+    pointer-events: none;
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  #tagline {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.2;
+    margin: 0;
+    padding-inline: 2rem;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.7s ease 0.2s, transform 0.7s ease 0.2s;
+  }
+  #phrase-screen.visible #tagline { opacity: 1; transform: translateY(0); }
+  #tagline em {
+    font-style: italic; color: var(--accent); display: inline-block;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #tagline em:hover { transform: translateY(-5px); }
+
+  #scroll-btn {
+    margin-top: 3rem;
+    background: none; border: none; cursor: pointer;
+    color: var(--ink-light);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.4s ease, transform 0.4s ease, color 0.2s;
+  }
+  #phrase-screen.visible:hover #scroll-btn {
+    opacity: 1;
+    transform: translateY(0);
+    animation: bob 1.8s ease-in-out infinite;
+  }
+  #scroll-btn:hover { color: var(--ink); }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(6px); }
+  }
+
+  /* ── STATE 3: GALLERY ── */
+  #gallery {
+    position: fixed;
+    inset: 0;
+    background: var(--cream);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(40px);
+    transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1);
+  }
+  #gallery.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+
+  #gallery-nav {
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding-inline: clamp(2rem, 5vw, 5rem);
+    border-bottom: 1px solid var(--cream-border);
+    opacity: 0; transform: translateY(-12px);
+    transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+  }
+  #gallery.visible #gallery-nav { opacity: 1; transform: translateY(0); }
+
+  .nav-link {
+    font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-mid); transition: color 0.2s; text-decoration: none;
+  }
+  .nav-link:hover { color: var(--ink); }
+  .nav-center-logo { background: var(--cream); padding: 2px; line-height: 0; border-radius: 2px; }
+  .nav-center-logo img { height: 32px; width: auto; display: block; mix-blend-mode: multiply; }
+
+  #projects-row {
+    position: absolute;
+    top: 56px; bottom: 0; left: 0; right: 0;
+    display: flex; align-items: center; overflow: hidden;
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s;
+  }
+  #gallery.visible #projects-row { opacity: 1; transform: translateY(0); }
+  #projects-row::before, #projects-row::after {
+    content: ''; position: absolute; top: 0; bottom: 0;
+    width: 80px; pointer-events: none; z-index: 10;
+  }
+  #projects-row::before { left: 0; background: linear-gradient(to right, rgba(250,248,243,0.6) 0%, transparent 100%); }
+  #projects-row::after  { right: 0; background: linear-gradient(to left, rgba(250,248,243,0.6) 0%, transparent 100%); }
+
+  #projects-track {
+    display: flex; gap: 1.5rem; padding-inline: 3rem;
+    will-change: transform; cursor: grab;
+  }
+  #projects-track:active { cursor: grabbing; }
+
+  .project-item {
+    flex-shrink: 0; width: clamp(280px, 25vw, 360px);
+    text-decoration: none; color: inherit;
+  }
+  .project-item__img { width: 100%; aspect-ratio: 3/4; overflow: hidden; background: var(--cream-dark); }
+  .project-item__img img {
+    width: 100% !important; height: 100% !important; max-width: none !important;
+    object-fit: cover; display: block; transition: transform 0.6s ease;
+  }
+  .project-item:hover .project-item__img img { transform: scale(1.04); }
+  .project-item__title {
+    margin-top: 0.75rem; font-family: var(--font-display);
+    font-size: 0.95rem; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .project-item__tag {
+    font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-light); margin-top: 0.2rem;
+  }
+</style>
+
+<script>
+  const cursor     = document.getElementById('cursor')!;
+  const intro      = document.getElementById('intro')!;
+  const enterBtn   = document.getElementById('enter-btn')!;
+  const phraseScreen = document.getElementById('phrase-screen')!;
+  const scrollBtn  = document.getElementById('scroll-btn')!;
+  const gallery    = document.getElementById('gallery')!;
+  const track      = document.getElementById('projects-track')!;
+
+  let state: 'intro' | 'phrase' | 'gallery' = 'intro';
+  let pos = 0, baseSpeed = 0.4, userDelta = 0;
+  let decayTimer: ReturnType<typeof setTimeout>;
+  let trackHalf = 0;
+
+  // Cursor
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top  = e.clientY + 'px';
+  });
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+  });
+
+  // STEP 1: Logo click → phrase
+  enterBtn.addEventListener('click', () => {
+    if (state !== 'intro') return;
+    state = 'phrase';
+    enterBtn.classList.add('spin');
+    setTimeout(() => intro.classList.add('zooming'), 200);
+    setTimeout(() => {
+      intro.classList.add('hidden');
+      phraseScreen.classList.add('visible');
+    }, 750);
+  });
+
+  // STEP 2: Arrow click or scroll → gallery
+  function showGallery() {
+    if (state !== 'phrase') return;
+    state = 'gallery';
+    phraseScreen.classList.add('hiding');
+    setTimeout(() => {
+      phraseScreen.style.display = 'none';
+      gallery.classList.add('visible');
+      trackHalf = track.scrollWidth / 2;
+      animate();
+    }, 500);
+  }
+
+  scrollBtn.addEventListener('click', showGallery);
+  window.addEventListener('wheel', (e) => {
+    if (state === 'phrase' && e.deltaY > 0) { showGallery(); return; }
+    if (state === 'gallery') {
+      userDelta += e.deltaY * 0.04;
+      userDelta = Math.max(-8, Math.min(8, userDelta));
+      clearTimeout(decayTimer);
+      decayTimer = setTimeout(() => {
+        const decay = setInterval(() => {
+          userDelta *= 0.88;
+          if (Math.abs(userDelta) < 0.05) { userDelta = 0; clearInterval(decay); }
+        }, 16);
+      }, 150);
+    }
+  }, { passive: true });
+
+  function animate() {
+    pos += baseSpeed + userDelta;
+    if (pos >= trackHalf) pos -= trackHalf;
+    if (pos < 0) pos += trackHalf;
+    track.style.transform = `translateX(${-pos}px)`;
+    requestAnimationFrame(animate);
+  }
+</script>

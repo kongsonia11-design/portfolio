@@ -220,6 +220,17 @@ const projects = allProjects
   }
   #projects-track:active { cursor: grabbing; }
 
+  /* ── Mobile: scroll button always visible, no grab cursor ── */
+  @media (hover: none), (pointer: coarse) {
+    #scroll-btn {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+      animation: bob 1.8s ease-in-out infinite !important;
+    }
+    #projects-track { cursor: default; }
+    #projects-track:active { cursor: default; }
+  }
+
   .project-item {
     flex-shrink: 0; width: clamp(280px, 25vw, 360px);
     text-decoration: none; color: inherit;
@@ -313,4 +324,43 @@ const projects = allProjects
     track.style.transform = `translateX(${-pos}px)`;
     requestAnimationFrame(animate);
   }
+
+  // ── Touch swipe support ──
+  let touchStartX = 0;
+  let touchLastX = 0;
+  let touchVelocity = 0;
+
+  track.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchLastX = touchStartX;
+    touchVelocity = 0;
+  }, { passive: true });
+
+  track.addEventListener('touchmove', (e) => {
+    const x = e.touches[0].clientX;
+    const delta = touchLastX - x;
+    touchVelocity = delta;
+    userDelta = delta * 0.18;
+    userDelta = Math.max(-10, Math.min(10, userDelta));
+    touchLastX = x;
+  }, { passive: true });
+
+  track.addEventListener('touchend', () => {
+    // carry momentum then decay
+    userDelta = Math.max(-10, Math.min(10, touchVelocity * 0.18));
+    const decay = setInterval(() => {
+      userDelta *= 0.90;
+      if (Math.abs(userDelta) < 0.05) { userDelta = 0; clearInterval(decay); }
+    }, 16);
+  }, { passive: true });
+
+  // Swipe up on phrase screen to show gallery (mobile)
+  let phraseTouchStartY = 0;
+  phraseScreen.addEventListener('touchstart', (e) => {
+    phraseTouchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  phraseScreen.addEventListener('touchend', (e) => {
+    const deltaY = phraseTouchStartY - e.changedTouches[0].clientY;
+    if (deltaY > 40) showGallery();
+  }, { passive: true });
 </script>

@@ -1,4 +1,3 @@
----
 import { getCollection } from 'astro:content';
 import '../styles/global.css';
 
@@ -229,6 +228,20 @@ const projects = allProjects
     }
     #projects-track { cursor: default; }
     #projects-track:active { cursor: default; }
+
+    /* Manual native scroll on mobile — no JS-driven auto-scroll fighting your finger */
+    #projects-row {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+    }
+    #projects-track {
+      transform: none !important;
+      will-change: auto;
+    }
+    .project-item {
+      scroll-snap-align: start;
+    }
   }
 
   .project-item {
@@ -265,6 +278,7 @@ const projects = allProjects
   let pos = 0, baseSpeed = 0.4, userDelta = 0;
   let decayTimer: ReturnType<typeof setTimeout>;
   let trackHalf = 0;
+  const isTouchDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
   // Cursor
   document.addEventListener('mousemove', e => {
@@ -296,15 +310,17 @@ const projects = allProjects
     setTimeout(() => {
       phraseScreen.style.display = 'none';
       gallery.classList.add('visible');
-      trackHalf = track.scrollWidth / 2;
-      animate();
+      if (!isTouchDevice) {
+        trackHalf = track.scrollWidth / 2;
+        animate();
+      }
     }, 500);
   }
 
   scrollBtn.addEventListener('click', showGallery);
   window.addEventListener('wheel', (e) => {
     if (state === 'phrase' && e.deltaY > 0) { showGallery(); return; }
-    if (state === 'gallery') {
+    if (state === 'gallery' && !isTouchDevice) {
       userDelta += e.deltaY * 0.04;
       userDelta = Math.max(-8, Math.min(8, userDelta));
       clearTimeout(decayTimer);
@@ -325,34 +341,36 @@ const projects = allProjects
     requestAnimationFrame(animate);
   }
 
-  // ── Touch swipe support ──
-  let touchStartX = 0;
-  let touchLastX = 0;
-  let touchVelocity = 0;
+  // ── Touch swipe support (desktop trackpads / pen only — phones use native scroll) ──
+  if (!isTouchDevice) {
+    let touchStartX = 0;
+    let touchLastX = 0;
+    let touchVelocity = 0;
 
-  track.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;
-    touchLastX = touchStartX;
-    touchVelocity = 0;
-  }, { passive: true });
+    track.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchLastX = touchStartX;
+      touchVelocity = 0;
+    }, { passive: true });
 
-  track.addEventListener('touchmove', (e) => {
-    const x = e.touches[0].clientX;
-    const delta = touchLastX - x;
-    touchVelocity = delta;
-    userDelta = delta * 0.18;
-    userDelta = Math.max(-10, Math.min(10, userDelta));
-    touchLastX = x;
-  }, { passive: true });
+    track.addEventListener('touchmove', (e) => {
+      const x = e.touches[0].clientX;
+      const delta = touchLastX - x;
+      touchVelocity = delta;
+      userDelta = delta * 0.18;
+      userDelta = Math.max(-10, Math.min(10, userDelta));
+      touchLastX = x;
+    }, { passive: true });
 
-  track.addEventListener('touchend', () => {
-    // carry momentum then decay
-    userDelta = Math.max(-10, Math.min(10, touchVelocity * 0.18));
-    const decay = setInterval(() => {
-      userDelta *= 0.90;
-      if (Math.abs(userDelta) < 0.05) { userDelta = 0; clearInterval(decay); }
-    }, 16);
-  }, { passive: true });
+    track.addEventListener('touchend', () => {
+      // carry momentum then decay
+      userDelta = Math.max(-10, Math.min(10, touchVelocity * 0.18));
+      const decay = setInterval(() => {
+        userDelta *= 0.90;
+        if (Math.abs(userDelta) < 0.05) { userDelta = 0; clearInterval(decay); }
+      }, 16);
+    }, { passive: true });
+  }
 
   // Swipe up on phrase screen to show gallery (mobile)
   let phraseTouchStartY = 0;
